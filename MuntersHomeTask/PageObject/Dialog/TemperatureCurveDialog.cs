@@ -24,5 +24,16 @@ namespace MuntersHomeTask.PageObject.Dialog
             };
             return ElementAction.FindElements(fieldsBy);
         }
+        // TOCHEKC
+        public IList<string> GetFieldText(TemperatureCurveTableType type)
+        {
+            IList<string> result = new List<string>();
+            IList<IWebElement> elementList = GetFieldElements(type);
+            foreach (IWebElement element in elementList)
+            {
+                result.Add(element.Text);
+            }
+            return result;
+        }
     }
 }

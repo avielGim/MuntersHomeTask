@@ -1,11 +1,14 @@
-﻿using MuntersHomeTask.PageObject.Dialog;
-using MuntersHomeTask.Utility;
+﻿using log4net;
 using OpenQA.Selenium;
+using MuntersHomeTask.Utility;
+using MuntersHomeTask.PageObject.Dialog;
 
 namespace MuntersHomeTask.PageObject.Components
 {
     public class FarmDetailsComp
     {
+        private static readonly ILog log = LogManager.GetLogger(typeof(FarmDetailsComp));
+
         #region Property
         private By _validationMessage = By.XPath("//div[@role='alertdialog' and @aria-live='polite']");
 
@@ -19,7 +22,9 @@ namespace MuntersHomeTask.PageObject.Components
         #region Method
         public string GetValidationMessage()
         {
-            return ElementAction.FindElement(_validationMessage).Text;
+            string validationTxt = ElementAction.FindElement(_validationMessage).Text;
+            log.Info($"Validation message: \"{validationTxt}\"");
+            return validationTxt;
         }
         #endregion
     }

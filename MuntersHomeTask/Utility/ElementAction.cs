@@ -1,18 +1,14 @@
-﻿using OpenQA.Selenium.DevTools;
-using OpenQA.Selenium.Support.UI;
+﻿using log4net;
 using OpenQA.Selenium;
 using SeleniumExtras.WaitHelpers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
+using OpenQA.Selenium.Support.UI;
 
 namespace MuntersHomeTask.Utility
 {
     public class ElementAction
     {
+        private static readonly ILog log = LogManager.GetLogger(typeof(ElementAction));
+
         static WebDriverWait _wait { get => new(_driver, MyWebDriver.GetImplicitWait()); }
         static IWebDriver _driver => MyWebDriver.GetDriver();
 
@@ -37,6 +33,7 @@ namespace MuntersHomeTask.Utility
             PaintElement(element, "blue", "red");
             Thread.Sleep(1500);
             element.SendKeys(value);
+            log.Info($"Send text to an element: {value}");
             ReturnElementColorToDefault(element);
         }
 
@@ -51,11 +48,13 @@ namespace MuntersHomeTask.Utility
             try
             {
                 element.Click();
+                log.Info($"Element clicked by selenium");
             }
             catch (ElementClickInterceptedException)
             {
                 IJavaScriptExecutor jsExecutor = (IJavaScriptExecutor)_driver;
                 jsExecutor.ExecuteScript("arguments[0].click();", element);
+                log.Info("Element clicked by java-script");
             }
         }
 

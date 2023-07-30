@@ -1,16 +1,14 @@
-﻿using MuntersHomeTask.Utility;
+﻿using log4net;
 using OpenQA.Selenium;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using MuntersHomeTask.Utility;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace MuntersHomeTask.PageObject.Components
 {
     public class KeypadBodyComp
     {
+        private static readonly ILog log = LogManager.GetLogger(typeof(KeypadBodyComp));
+
         private By _rangeNumbers = By.XPath("//span[@class='range-info']");
 
         public T GetMinRange<T>()
@@ -20,10 +18,12 @@ namespace MuntersHomeTask.PageObject.Components
 
             if (tType.Equals(typeof(int)) && !min.Contains('.'))
             {
+                log.Info($"Minimum int value: {(T)(object)int.Parse(min)}");
                 return (T)(object)int.Parse(min);
             }
             else if (tType.Equals(typeof(double)))
             {
+                log.Info($"Minimum double value: {(T)(object)double.Parse(min)}");
                 return (T)(object)double.Parse(min);
             }
             throw new ArgumentException("Invalid range format.");
@@ -35,10 +35,12 @@ namespace MuntersHomeTask.PageObject.Components
             
             if (tType.Equals(typeof(int)) && !max.Contains('.'))
             {
+                log.Info($"Maximum int value: {(T)(object)int.Parse(max)}");
                 return (T)(object)int.Parse(max);
             }
             else if (tType.Equals(typeof(double)))
             {
+                log.Info($"Maximum double value: {(T)(object)double.Parse(max)}");
                 return (T)(object)double.Parse(max);
             }
 

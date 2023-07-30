@@ -1,15 +1,15 @@
-﻿using NUnit.Framework;
-using MuntersHomeTask.Utility;
-using MuntersHomeTask.PageObject;
+﻿using log4net;
+using NUnit.Framework;
 using OpenQA.Selenium;
 using MuntersHomeTask.Enum;
-using log4net;
-using log4net.Config;
+using MuntersHomeTask.Utility;
+using MuntersHomeTask.PageObject;
+using MuntersHomeTask.JsonObject;
 
 namespace MuntersHomeTask.Test
 {
     [TestFixture]
-    public class HomeTaskTest
+    public class HomeTaskTest : BaseTest
     {
         private static readonly ILog log = LogManager.GetLogger(typeof(HomeTaskTest));
         readonly LoginPage loginPage = new();
@@ -17,10 +17,7 @@ namespace MuntersHomeTask.Test
 
         readonly int INDEX_ZERO = 0;
 
-        public HomeTaskTest()
-        {
-            XmlConfigurator.Configure(new FileInfo("log4net.config"));
-        }
+        private string _successMessage = "Changes saved";
 
 
         [Test]
@@ -32,14 +29,14 @@ namespace MuntersHomeTask.Test
                 MyWebDriver.InitDriver();
 
                 // login successfully
-                string email = "Munterstal@gmail.com";
-                string password = "123456Munters";
-                loginPage.Login(email, password);
+                User user = JsonReader.ExtractData<User>(User.JsonFile, "Success");
+                loginPage.Login(user);
                 loginPage.SignInButton.Click();
+                log.Info("Login");
 
                 // for the first farm in the menu tree
-                // M: click on the first farm
                 ElementAction.Click(mainPage.FarmListComp.GetFarmListElements()[INDEX_ZERO]);
+                log.Info("Click on the first farm");
 
                 // under the sub-menu there are the actual controllers, "1" appears as disconnected, and the other is active.
                 // M: click only on the connected one
@@ -53,7 +50,7 @@ namespace MuntersHomeTask.Test
                     {
                         isConnected = true;
                         ElementAction.Click(mainPage.ControllerListComp.GetControllerElements()[i]);
-                        // log ?
+                        log.Info($"Click on the connected controller at index={i}");
                     }
                 }
                 Assert.IsTrue(isConnected, "There is no controller that connected");
@@ -65,10 +62,13 @@ namespace MuntersHomeTask.Test
                 mainPage.FarmDetailsComp.FarmDetailsBarComp.MenuButton.Click();
                 mainPage.FarmDetailsComp.FarmDetailsBarComp.ClickOnMenu(FarmDetailsLeftMenuType.Climate);
                 mainPage.FarmDetailsComp.FarmDetailsBarComp.ClickOnMenu(FarmDetailsRightMenuType.TemperatureCurve);
+                log.Info("open controller Menu -> \"Climate\" -> \"Temperature Curve\" successfully");
 
                 // when you are in edit mode and at a certain Field(focus) you can see in the keypad the range that you can enter to the field 
                 // M: click on edit button
                 mainPage.FarmDetailsComp.FarmDetailsBlueBarComp.EditButton.Click();
+                log.Info("Click edit button");
+
                 // M: edit each field by random number between the givven range
                 IList<TemperatureCurveTableType> list = new List<TemperatureCurveTableType>()
                 {
@@ -82,59 +82,65 @@ namespace MuntersHomeTask.Test
 
                 // save changes
                 mainPage.FarmDetailsComp.FarmDetailsBlueBarComp.SaveButton.Click();
+                log.Info("Click save button");
                 // look for “Changes Saved Successfully” / “Failed To Save Changes” toaster as an assert condition.
-                Assert.AreEqual("Changes saved", mainPage.FarmDetailsComp.GetValidationMessage());
+                Assert.AreEqual(_successMessage, mainPage.FarmDetailsComp.GetValidationMessage(), "The message is not as expected");
+
+                MyWebDriver.Screenshot("Success!");
                 Thread.Sleep(5000);
             }
             catch (Exception ex)
             {
-                Assert.Fail($"Type: {ex.GetType()}\n" +
-                    $"Strace: {ex.StackTrace}\n" +
-                    $"message: {ex.Message}");
-                // TODO catch and fail logic
-            }
-            finally
-            {
-                MyWebDriver.QuitDriver();
+               CatchAndFail(ex);
             }
         }
 
-        [Test]
-        public void X()
-        {
-            log.Info("Hello");
-        }
+
         private void SetField(TemperatureCurveTableType type)
         {
             IWebElement typeField = mainPage.FarmDetailsComp.TemperatureCurveDialog.GetFieldElements(type)[INDEX_ZERO];
             ElementAction.Click(typeField);
-            Thread.Sleep(3000);
-            TestContext.WriteLine($"Changing field: {type}..." );
-            string value;
+            Thread.Sleep(3000); // wait for the Range to be modified
+            log.Info($"Changing field: {type}..." );
+            
+            string value = GetRandomValue(type);
+
+            log.Info($"Insert random value: {value}");
+            ElementAction.SetText(typeField, value);
+            Thread.Sleep(2000);
+            string currValue = mainPage.FarmDetailsComp.TemperatureCurveDialog.GetFieldText(type)[INDEX_ZERO];
+
+            // TOCHECK the try and catch logic
+            try
+            {
+                if (currValue.Contains(value))
+                    Assert.Fail($"The value at {type} should be contains ={value}, but actual={currValue}");
+            }
+            catch (Exception ex)
+            {
+                log.Error($"The insert value is not as expected={value} actual={currValue}");
+                CatchAndFail(ex);
+                value = GetRandomValue(type);
+                ElementAction.SetText(typeField, value);            
+            }
+            log.Info($"Finish change field: {type}\n");
+            Thread.Sleep(8000); // wait for the Range to be modified
+        }
+        public string GetRandomValue(TemperatureCurveTableType type)
+        {            
             switch (type)
             {
                 case TemperatureCurveTableType.Day:
                     int dayMin = mainPage.FarmDetailsComp.KeypadBodyComp.GetMinRange<int>();
                     int dayMax = mainPage.FarmDetailsComp.KeypadBodyComp.GetMaxRange<int>();
                     int rand = new Random().Next(dayMin, dayMax);
-                    value = rand.ToString();
-                    TestContext.WriteLine($"min value: {dayMin}" );
-                    TestContext.WriteLine($"max value: {dayMax}" );
-                    break;
+                    return rand.ToString();
                 default:
                     double minimum = mainPage.FarmDetailsComp.KeypadBodyComp.GetMinRange<double>();
                     double maximum = mainPage.FarmDetailsComp.KeypadBodyComp.GetMaxRange<double>();
                     double randDouble = new Random().NextDouble() * (maximum - minimum) + minimum;
-                    value = randDouble.ToString();
-                    TestContext.WriteLine($"minValue: {minimum}");
-                    TestContext.WriteLine($"maxValue: {maximum}");
-                    break;
+                    return randDouble.ToString();
             }
-
-            TestContext.WriteLine($"Insert random value: {value}");
-            ElementAction.SetText(typeField, value);
-            TestContext.WriteLine($"Finish change field: {type}\n");
-            Thread.Sleep(2000);
         }
     }
 }
