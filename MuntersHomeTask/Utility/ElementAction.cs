@@ -37,6 +37,19 @@ namespace MuntersHomeTask.Utility
             ReturnElementColorToDefault(element);
         }
 
+        public static void DeleteText(IWebElement element)
+        {
+            //// Clear the text input before sending backspace to ensure the cursor is at the end of the text
+            //element.Clear();
+
+            // Send the "Backspace" key multiple times to delete characters from the input
+            int textLength = 10; // Replace with the number of characters you want to delete
+            for (int i = 0; i < textLength; i++)
+            {
+                element.SendKeys(Keys.Backspace);
+            }
+            log.Info("Delete text from element");
+        }
         // click
         public static void Click(By by)
         {

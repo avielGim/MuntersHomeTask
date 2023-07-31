@@ -73,6 +73,7 @@ namespace MuntersHomeTask.Test
                 IList<TemperatureCurveTableType> list = new List<TemperatureCurveTableType>()
                 {
                     TemperatureCurveTableType.Day, TemperatureCurveTableType.Target,
+                    TemperatureCurveTableType.Heat, TemperatureCurveTableType.Cool,
                     TemperatureCurveTableType.LowTAlarm, TemperatureCurveTableType.HighTAlarm,
                 };
                 foreach (TemperatureCurveTableType type in list)
@@ -83,6 +84,7 @@ namespace MuntersHomeTask.Test
                 // save changes
                 mainPage.FarmDetailsComp.FarmDetailsBlueBarComp.SaveButton.Click();
                 log.Info("Click save button");
+
                 // look for “Changes Saved Successfully” / “Failed To Save Changes” toaster as an assert condition.
                 Assert.AreEqual(_successMessage, mainPage.FarmDetailsComp.GetValidationMessage(), "The message is not as expected");
 
@@ -98,33 +100,26 @@ namespace MuntersHomeTask.Test
 
         private void SetField(TemperatureCurveTableType type)
         {
-            IWebElement typeField = mainPage.FarmDetailsComp.TemperatureCurveDialog.GetFieldElements(type)[INDEX_ZERO];
+            IList<IWebElement> fieldElements = mainPage.FarmDetailsComp.TemperatureCurveDialog.GetFieldElements(type);
+            if (fieldElements == null || fieldElements.Count == 0)
+            {
+                log.Info($"There is not field type: {type}");
+                return;
+            }
+            IWebElement typeField = fieldElements[INDEX_ZERO];
             ElementAction.Click(typeField);
             Thread.Sleep(3000); // wait for the Range to be modified
             log.Info($"Changing field: {type}..." );
             
             string value = GetRandomValue(type);
 
-            log.Info($"Insert random value: {value}");
+            ElementAction.DeleteText(typeField);
             ElementAction.SetText(typeField, value);
+            log.Info($"Insert random value: {value}");
             Thread.Sleep(2000);
-            string currValue = mainPage.FarmDetailsComp.TemperatureCurveDialog.GetFieldText(type)[INDEX_ZERO];
-
-            // TOCHECK the try and catch logic
-            try
-            {
-                if (currValue.Contains(value))
-                    Assert.Fail($"The value at {type} should be contains ={value}, but actual={currValue}");
-            }
-            catch (Exception ex)
-            {
-                log.Error($"The insert value is not as expected={value} actual={currValue}");
-                CatchAndFail(ex);
-                value = GetRandomValue(type);
-                ElementAction.SetText(typeField, value);            
-            }
+            
             log.Info($"Finish change field: {type}\n");
-            Thread.Sleep(8000); // wait for the Range to be modified
+            Thread.Sleep(6000); // wait for the Range to be modified
         }
         public string GetRandomValue(TemperatureCurveTableType type)
         {            

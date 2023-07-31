@@ -11,6 +11,8 @@ namespace MuntersHomeTask.Enum
     {
         Day,
         Target,
+        Heat,
+        Cool,
         LowTAlarm,
         HighTAlarm
     }
