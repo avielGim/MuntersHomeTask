@@ -17,7 +17,7 @@ namespace MuntersHomeTask.Test
 
         readonly int INDEX_ZERO = 0;
 
-        private string _successMessage = "Changes saved";
+        private readonly string _successMessage = "Changes saved";
 
 
         [Test]

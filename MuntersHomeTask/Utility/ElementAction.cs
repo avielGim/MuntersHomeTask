@@ -9,18 +9,18 @@ namespace MuntersHomeTask.Utility
     {
         private static readonly ILog log = LogManager.GetLogger(typeof(ElementAction));
 
-        static WebDriverWait _wait { get => new(_driver, MyWebDriver.GetImplicitWait()); }
-        static IWebDriver _driver => MyWebDriver.GetDriver();
+        static WebDriverWait Wait { get => new(Driver, MyWebDriver.GetImplicitWait()); }
+        static IWebDriver Driver => MyWebDriver.GetDriver();
 
         // TODO: log
 
         public static IWebElement FindElement(By by)
         {
-            return _wait.Until(ExpectedConditions.ElementIsVisible(by));
+            return Wait.Until(ExpectedConditions.ElementIsVisible(by));
         }
         public static IList<IWebElement> FindElements(By by)
         {
-            return _wait.Until(ExpectedConditions.VisibilityOfAllElementsLocatedBy(by));
+            return Wait.Until(ExpectedConditions.VisibilityOfAllElementsLocatedBy(by));
         }
 
         public static void SetText(By by, string value)
@@ -53,7 +53,7 @@ namespace MuntersHomeTask.Utility
         // click
         public static void Click(By by)
         {
-            IWebElement element = _wait.Until(ExpectedConditions.ElementToBeClickable(by));
+            IWebElement element = Wait.Until(ExpectedConditions.ElementToBeClickable(by));
             Click(element);
         }
         public static void Click(IWebElement element)
@@ -65,7 +65,7 @@ namespace MuntersHomeTask.Utility
             }
             catch (ElementClickInterceptedException)
             {
-                IJavaScriptExecutor jsExecutor = (IJavaScriptExecutor)_driver;
+                IJavaScriptExecutor jsExecutor = (IJavaScriptExecutor)Driver;
                 jsExecutor.ExecuteScript("arguments[0].click();", element);
                 log.Info("Element clicked by java-script");
             }
@@ -79,7 +79,7 @@ namespace MuntersHomeTask.Utility
         public static void PaintElement(IWebElement element, string background, string border)
         {
             string command = $"arguments[0].setAttribute('style', 'background: {background}; border: 2px solid {border};');";
-            IJavaScriptExecutor js = (IJavaScriptExecutor)_driver;
+            IJavaScriptExecutor js = (IJavaScriptExecutor)Driver;
             js.ExecuteScript(command, element);
         }
     }
